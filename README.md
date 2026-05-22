@@ -3,9 +3,9 @@
 Веб-ориентированная CRM-система на базе Flask для управления продажами, автоматического учета складских остатков и ведения бонусной программы лояльности клиентов.
 
 ## Технологический стек
-* **Backend:** Python 3.10+, Flask, SQLAlchemy
-* **Database:** SQLite
-* **Frontend:** HTML5, CSS3, Bootstrap 5, JavaScript
+**Backend:** Python 3.10+, Flask, SQLAlchemy
+**Database:** SQLite
+**Frontend:** HTML5, CSS3, Bootstrap 5, JavaScript
 
 ## Функционал
 * Авторизация сотрудников с разграничением прав (Администратор / Бариста).
