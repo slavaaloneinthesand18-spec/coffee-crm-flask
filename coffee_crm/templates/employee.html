@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Take a break - Сотрудник</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .sidebar { background: #212529; color: white; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
+        .main-content { margin-left: 0; }
+        .card-soft { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        /* --- Mobile UX: одна прокрутка страницы (без внутреннего скролла сайдбара) --- */
+        @media (max-width: 767.98px) {
+            .sidebar {
+                position: static;
+                top: auto;
+                height: auto;
+                overflow: visible;
+                z-index: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 sidebar p-3 shadow">
+            <h4 class="text-center mb-4">☕ Take a break</h4>
+            <div class="d-grid gap-2 mb-4">
+                <a href="/admin" class="btn btn-outline-light btn-sm text-start">← Назад в админку</a>
+                <form action="/logout" method="POST" class="mt-2">
+                    <button type="submit" class="btn btn-outline-light btn-sm w-100 text-start">🚪 Выйти</button>
+                </form>
+            </div>
+            <div class="small text-secondary text-center mt-5">CRM v1.0 · Диплом 2026</div>
+        </div>
+
+        <div class="col-md-10 main-content p-4">
+            <div class="mb-3">
+                <h2 class="mb-1">{{ employee.full_name }}</h2>
+                <p class="text-muted mb-0">Выручка за выбранный день</p>
+            </div>
+
+            <div class="card card-soft bg-white mb-3">
+                <div class="card-body">
+                    <form class="row g-2 align-items-end" method="GET" action="/admin/employees/{{ employee.id }}">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">День</label>
+                            <input type="date" class="form-control" name="day" value="{{ day }}">
+                        </div>
+                        <div class="col-md-3 d-grid">
+                            <button class="btn btn-dark">Показать</button>
+                        </div>
+                    </form>
+                    <hr class="my-3">
+                    <div class="d-flex gap-4">
+                        <div>
+                            <div class="text-muted small">Выручка</div>
+                            <div class="h3 mb-0">{{ revenue }} ₽</div>
+                        </div>
+                        <div class="text-muted small align-self-end">
+                            В расчёт берутся только закрытые смены.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-soft bg-white">
+                <div class="card-body">
+                    <h5 class="mb-2">Закрытые смены за день</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Открыта</th>
+                                    <th>Закрыта</th>
+                                    <th class="text-end">Выручка</th>
+                                    <th class="text-end">Касса (ввод)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in shifts %}
+                                <tr>
+                                    <td><a href="/admin/shifts/{{ s.id }}">Смена #{{ s.id }}</a></td>
+                                    <td class="text-muted">{{ s.opened_at }}</td>
+                                    <td class="text-muted">{{ s.closed_at }}</td>
+                                    <td class="text-end fw-semibold">{{ s.revenue }} ₽</td>
+                                    <td class="text-end">{{ s.cash_counted }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% if shifts|length == 0 %}
+                                <tr><td colspan="5" class="text-muted">Нет закрытых смен за этот день</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

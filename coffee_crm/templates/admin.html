@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Take a break - Админ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .sidebar { background: #212529; color: white; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
+        .main-content { margin-left: 0; }
+        .card-soft { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        /* --- Mobile UX: одна прокрутка страницы (без внутреннего скролла сайдбара) --- */
+        @media (max-width: 767.98px) {
+            .sidebar {
+                position: static;
+                top: auto;
+                height: auto;
+                overflow: visible;
+                z-index: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 sidebar p-3 shadow">
+            <h4 class="text-center mb-4">☕ Take a break</h4>
+            <div class="d-grid gap-2 mb-4">
+                <a href="/" class="btn btn-outline-light btn-sm text-start">🖥️ Терминал</a>
+                <a href="/admin" class="btn btn-light btn-sm text-start">🔒 Админ</a>
+                <a href="/supply" class="btn btn-outline-light btn-sm text-start">🚚 Поставка</a>
+                <form action="/logout" method="POST" class="mt-2">
+                    <button type="submit" class="btn btn-outline-light btn-sm w-100 text-start">🚪 Выйти</button>
+                </form>
+            </div>
+            <div class="p-3 bg-secondary bg-opacity-25 rounded mb-4">
+                <h6>📦 Склад</h6>
+                {% for item in stock %}
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ item.name }}</span>
+                    <span class="badge {% if item.quantity < 20 %}bg-danger{% else %}bg-success{% endif %}">{{ item.quantity }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="small text-secondary text-center mt-5">CRM v1.0 · Диплом 2026</div>
+        </div>
+
+        <div class="col-md-10 main-content p-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="mb-3">
+                <h2 class="mb-1">Панель администратора</h2>
+                <p class="text-muted mb-0">Статистика и управление сотрудниками</p>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card card-soft bg-primary text-white">
+                        <div class="card-body">
+                            <small>Общая выручка</small>
+                            <div class="display-6 fw-semibold">{{ total_sales }} ₽</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-soft bg-success text-white">
+                        <div class="card-body">
+                            <small>Клиентов в базе</small>
+                            <div class="display-6 fw-semibold">{{ total_customers }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <div class="card card-soft bg-white">
+                        <div class="card-body">
+                            <h5 class="mb-1">Сотрудники</h5>
+                            <div class="text-muted small mb-3">Добавляйте персонал: они смогут входить в систему, но не увидят админ-панель</div>
+
+                            <form action="/admin/add_employee" method="POST" class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">ФИО</label>
+                                    <input type="text" class="form-control" name="full_name" placeholder="Например: Иванов Иван Иванович" maxlength="150" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">Пароль</label>
+                                    <input type="password" class="form-control" name="password" placeholder="Минимум 4 символа" required>
+                                </div>
+                                <div class="col-12 d-grid mt-2">
+                                    <button type="submit" class="btn btn-dark">Добавить сотрудника</button>
+                                </div>
+                            </form>
+
+                            <hr class="my-4">
+
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ФИО</th>
+                                            <th>Статус</th>
+                                            <th class="text-end">Действия</th>
+                                            <th class="text-muted">Создан</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for e in employees %}
+                                        <tr>
+                                            <td class="fw-semibold"><a href="/admin/employees/{{ e.id }}">{{ e.full_name }}</a></td>
+                                            <td>
+                                                {% if e.is_active %}
+                                                    <span class="badge bg-success">active</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">off</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                {% if e.full_name != 'Администратор' %}
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <form action="/admin/employees/{{ e.id }}/toggle" method="POST">
+                                                            {% if e.is_active %}
+                                                                <button type="submit" class="btn btn-outline-warning">Выключить</button>
+                                                            {% else %}
+                                                                <button type="submit" class="btn btn-outline-success">Включить</button>
+                                                            {% endif %}
+                                                        </form>
+                                                        <form action="/admin/employees/{{ e.id }}/delete" method="POST"
+                                                              onsubmit="return confirm('Удалить сотрудника {{ e.full_name }}?')">
+                                                            <button type="submit" class="btn btn-outline-danger">Удалить</button>
+                                                        </form>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted small">—</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-muted small">{{ e.date_created.strftime('%d.%m.%Y') }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                        {% if employees|length == 0 %}
+                                        <tr><td colspan="4" class="text-muted">Сотрудников пока нет</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card card-soft bg-white">
+                        <div class="card-body">
+                            <h5 class="mb-1">Закрытые смены</h5>
+                            <div class="text-muted small mb-3">Нажмите на смену, чтобы посмотреть детали</div>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Смена</th>
+                                            <th>Сотрудник</th>
+                                            <th>День</th>
+                                            <th class="text-end">Выручка</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for s in closed_shifts %}
+                                        <tr>
+                                            <td><a href="/admin/shifts/{{ s.id }}">#{{ s.id }}</a></td>
+                                            <td><a href="/admin/employees/{{ s.employee_id }}">{{ s.full_name }}</a></td>
+                                            <td class="text-muted">{{ s.day }}</td>
+                                            <td class="text-end fw-semibold">{{ s.revenue }} ₽</td>
+                                        </tr>
+                                        {% endfor %}
+                                        {% if closed_shifts|length == 0 %}
+                                        <tr><td colspan="4" class="text-muted">Закрытых смен пока нет</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h5 class="mb-1">Поставки и склад</h5>
+                            <div class="text-muted small mb-3">Переходите в «Поставка» для приёма товаров</div>
+                            <a href="/supply" class="btn btn-outline-dark">Открыть поставку</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
